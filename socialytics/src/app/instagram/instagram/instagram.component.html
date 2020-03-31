@@ -1,0 +1,156 @@
+<div class="container-fluid m-0 jumbotron bg-warning">
+  <div class="container d-flex justify-content-center p-3 my-3 text-white-50">
+    <a [routerLink]="['/']"><img class="mr-3" src="assets/logo.png" width="64" height="64"></a>
+    <div class="lh-100">
+      <h2 class="mb-1 text-white"><a class="text-white" [routerLink]="['/']">Socialytics.</a></h2>
+      <span nz-text>Blazing fast, actionable Instagram analytics for any public account 🚀</span>
+    </div>
+  </div>
+  <div class="container d-flex justify-content-center">
+    <form [formGroup]="searchQuery" (submit)="search()" class="col-lg-6 col-md-8 col-sm-10 col-xs-12 mb-3">
+      <nz-input-group nzAddOnBefore="@" [nzSuffix]="suffixIconSearch">
+        <input #usernameSearchBar nz-input type="text" value="search" id="searchbar" placeholder="Instagram username"
+          [(ngModel)]="username" formControlName="username" (submit)="search()">
+      </nz-input-group>
+      <ng-template #suffixIconSearch>
+        <i nz-icon nzType="search"></i>
+      </ng-template>
+    </form>
+  </div>
+</div>
+
+<div *ngIf="!loading && !stats">
+  <nz-result nzStatus="403">
+    <div nz-result-extra>
+      <button nz-button nzType="primary" (click)="focusUsernameSearch()">Search for a user to view statistics</button>
+    </div>
+  </nz-result>
+</div>
+
+<div *ngIf="loading && !loaded" class="container-fluid m-0 py-4 min-100 bg-light">
+  <div class="container">
+    <nz-skeleton [nzActive]="loading" class="row w-100" [nzAvatar]="true" [nzParagraph]="{ rows: 4 }"></nz-skeleton>
+    <div class="d-flex mt-4 justify-content-between">
+      <nz-card *ngFor="let i of [1,2,3]" style="background: transparent; width: 31%">
+        <nz-skeleton [nzActive]="true" [nzLoading]="loading">
+          <nz-card-meta>
+          </nz-card-meta>
+        </nz-skeleton>
+      </nz-card>
+    </div>
+    <div class="d-flex mt-4 justify-content-between">
+      <nz-card style="background: transparent; width: 100%">
+        <nz-skeleton [nzActive]="true" [nzLoading]="loading" [nzParagraph]="{ rows: 10 }">
+          <nz-card-meta>
+          </nz-card-meta>
+        </nz-skeleton>
+      </nz-card>
+    </div>
+    <div class="d-flex mt-4 justify-content-between">
+      <nz-card *ngFor="let i of [1,2,3,4]" style="background: transparent; width: 23.5%">
+        <nz-skeleton [nzActive]="true" [nzLoading]="loading">
+          <nz-card-meta>
+          </nz-card-meta>
+        </nz-skeleton>
+      </nz-card>
+    </div>
+    <div class="d-flex mt-4 justify-content-between">
+      <nz-card *ngFor="let i of [1,2]" style="background: transparent; width: 47.5%">
+        <nz-skeleton [nzActive]="true" [nzLoading]="loading" [nzParagraph]="{ rows: 10 }">
+          <nz-card-meta>
+          </nz-card-meta>
+        </nz-skeleton>
+      </nz-card>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="loaded && stats" class="container-fluid bg-light stats-container">
+  <div class="container">
+    <div class="row w-100">
+      <div class="col-2 d-flex align-items-center justify-content-center">
+        <img class="avatar" [src]="stats.profilePictureUrlHD" />
+      </div>
+      <div class="col-8 col-xs-6 card-body">
+        <div class="name">
+          {{stats.name}}
+        </div>
+        <div>
+          <a class="username" [href]="'https://instagram.com/'  + stats.username"
+            target="_blank">@{{stats.username}}</a>
+        </div>
+        <div class="bio">
+          {{stats.bio}}
+        </div>
+        <div class="website">
+          <a (click)="externalUrl(stats.website)" target="_blank">{{stats.website}}</a>
+        </div>
+      </div>
+    </div>
+    <div [style.margin-top.px]="'20'" class="row">
+      <div *ngFor="let item of summary" class="col-md-4">
+        <app-scorecard [item]="item"></app-scorecard>
+      </div>
+    </div>
+    <div class="row">
+      <div *ngFor="let item of engagements" class="col-md-3">
+        <app-scorecard [item]="item"></app-scorecard>
+      </div>
+    </div>
+
+
+    <div class="row">
+      <app-gallery [title]="'Most Liked Media'" [galleryMedia]="mostLikedMedia" [sampleSize]="sampleSize"
+        [term]="'likes'" (toggleModal)="toggleModal($event, tplTitle, tplFooter)" (externalUrl)="externalUrl($event)"
+        class="col-md-12 col-lg-6">
+      </app-gallery>
+      <app-gallery [title]="'Most Commented Media'" [galleryMedia]="mostCommentedMedia" [sampleSize]="sampleSize"
+        [term]="'comments'" (toggleModal)="toggleModal($event, tplTitle, tplFooter)" (externalUrl)="externalUrl($event)"
+        class="col-md-12 col-lg-6">
+      </app-gallery>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4 box-shadow">
+          <div class="card-header text-center">
+            <h6>Posts by day of week</h6>
+          </div>
+          <div class="card-body text-center">
+            <canvas baseChart [datasets]="barChartData" [labels]="barChartLabels" [options]="barChartOptions"
+              [plugins]="barChartPlugins" [legend]="barChartLegend" [chartType]="barChartType">
+            </canvas>
+            <small style="font-size: 10px">(based on {{sampleSize}} posts)</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <p style="font-size: 9px;">
+      *Instagram public endpoints have been changing since April 2018. As a result, the
+      application is in continuous development. If the endpoints have changed since the last test run, please bear
+      with me and consider creating an issue <a href="https://github.com/preethamvishy/socialytics/issues">here</a>.
+    </p>
+  </div>
+</div>
+
+<ng-template #tplTitle>
+  <h5 class="modal-title text-secondary" id="postExpandTitle">@{{stats.username}}'s post</h5>
+</ng-template>
+
+<ng-template #tplFooter>
+  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+  <button type="button" class="btn btn-primary"
+    (click)="externalUrl('http://www.instagram.com/p/' + expandPost.node.shortcode)">Open in
+    Instagram</button>
+</ng-template>
+
+<ng-template #tplError>
+  Looks like the username is invalid or Instagram is blocking our request.
+</ng-template>
+
+<ng-template #tplUserError>
+    A user with the specified username does not exist.
+  </ng-template>
